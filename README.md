@@ -94,8 +94,8 @@ If you prefer to set things up manually instead of using the DMG:
 
 ```bash
 # Clone the repo
-git clone https://github.com/YOUR_USERNAME/yt-downloader.git
-cd yt-downloader
+git clone https://github.com/jaydeepdholakia/yt-downloader-premiere-pro.git
+cd yt-downloader-premiere-pro
 
 # Install Python dependencies
 pip3 install --user -r requirements.txt
