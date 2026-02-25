@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YT Downloader</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f0f;
+      color: #e1e1e1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      padding: 1.5rem 2rem;
+      background: #181818;
+      border-bottom: 1px solid #2a2a2a;
+      text-align: center;
+    }
+
+    header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #ff4444;
+    }
+
+    header h1 span { color: #e1e1e1; }
+
+    main {
+      width: 100%;
+      max-width: 900px;
+      padding: 2rem 1.5rem;
+    }
+
+    /* Search Bar */
+    .search-section {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .search-section input {
+      flex: 1;
+      padding: 0.85rem 1.2rem;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 10px;
+      color: #e1e1e1;
+      font-size: 1rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .search-section input:focus { border-color: #ff4444; }
+    .search-section input::placeholder { color: #666; }
+
+    .btn-fetch {
+      padding: 0.85rem 1.8rem;
+      background: #ff4444;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-fetch:hover { background: #e03030; }
+    .btn-fetch:disabled { background: #555; cursor: not-allowed; }
+
+    /* Loading */
+    .loader {
+      display: none;
+      text-align: center;
+      padding: 3rem 0;
+    }
+
+    .loader.active { display: block; }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #333;
+      border-top-color: #ff4444;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      background: #2a1515;
+      border: 1px solid #ff4444;
+      border-radius: 10px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #ff6b6b;
+    }
+
+    .error-msg.active { display: block; }
+
+    /* Video Info */
+    .video-info {
+      display: none;
+      background: #181818;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+      gap: 1.25rem;
+    }
+
+    .video-info.active { display: flex; }
+
+    .video-info img {
+      width: 200px;
+      height: auto;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+
+    .video-meta { display: flex; flex-direction: column; gap: 0.4rem; }
+    .video-meta h2 { font-size: 1.15rem; font-weight: 600; color: #fff; }
+    .video-meta .channel { color: #aaa; font-size: 0.95rem; }
+    .video-meta .duration { color: #888; font-size: 0.85rem; }
+
+    /* Format Sections */
+    .formats-container { display: none; }
+    .formats-container.active { display: block; }
+
+    .format-section { margin-bottom: 2rem; }
+
+    .format-section h3 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #2a2a2a;
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .format-section h3 .icon { font-size: 1.2rem; }
+
+    .format-section h3 .count {
+      color: #888;
+      font-weight: 400;
+      font-size: 0.9rem;
+    }
+
+    /* Format Table */
+    .format-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .format-table th {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      border-bottom: 1px solid #2a2a2a;
+    }
+
+    .format-table td {
+      padding: 0.65rem 0.75rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid #1a1a1a;
+      vertical-align: middle;
+    }
+
+    .format-table tr:hover td { background: #1a1a1a; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .badge-ext {
+      background: #2a2a2a;
+      color: #ccc;
+    }
+
+    .btn-dl {
+      padding: 0.4rem 1rem;
+      background: #ff4444;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-dl:hover { background: #e03030; }
+    .btn-dl:disabled { background: #555; cursor: not-allowed; }
+
+    .quality-label {
+      color: #aaa;
+      font-size: 0.82rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .video-info { flex-direction: column; }
+      .video-info img { width: 100%; }
+      .search-section { flex-direction: column; }
+      .btn-fetch { width: 100%; }
+      .format-table { font-size: 0.82rem; }
+      .format-table th, .format-table td { padding: 0.5rem 0.4rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1><span>YT</span> Downloader</h1>
+  </header>
+
+  <main>
+    <div class="search-section">
+      <input type="text" id="url-input" placeholder="Paste a YouTube URL here..." />
+      <button class="btn-fetch" id="fetch-btn" onclick="fetchFormats()">Fetch</button>
+    </div>
+
+    <div class="error-msg" id="error-msg"></div>
+
+    <div class="loader" id="loader">
+      <div class="spinner"></div>
+      <p>Fetching available formats...</p>
+    </div>
+
+    <div class="video-info" id="video-info">
+      <img id="video-thumb" src="" alt="Thumbnail" />
+      <div class="video-meta">
+        <h2 id="video-title"></h2>
+        <div class="channel" id="video-channel"></div>
+        <div class="duration" id="video-duration"></div>
+      </div>
+    </div>
+
+    <div class="formats-container" id="formats-container">
+      <!-- Video Formats -->
+      <div class="format-section">
+        <h3>
+          <span class="icon">&#127909;</span>
+          Video Formats
+          <span class="count" id="video-count"></span>
+        </h3>
+        <div style="overflow-x:auto;">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Quality</th>
+                <th>Format</th>
+                <th>Size (approx)</th>
+                <th>Bitrate</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="video-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Audio Formats -->
+      <div class="format-section">
+        <h3>
+          <span class="icon">&#127925;</span>
+          Audio Only (MP3)
+          <span class="count" id="audio-count"></span>
+        </h3>
+        <div style="overflow-x:auto;">
+          <table class="format-table">
+            <thead>
+              <tr>
+                <th>Quality</th>
+                <th>Format</th>
+                <th>Bitrate</th>
+                <th>Size (approx)</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="audio-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let currentUrl = "";
+
+    const urlInput = document.getElementById("url-input");
+    urlInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") fetchFormats();
+    });
+
+    function formatBytes(bytes) {
+      if (!bytes) return "—";
+      if (bytes < 1024) return bytes + " B";
+      if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+      if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + " MB";
+      return (bytes / 1073741824).toFixed(2) + " GB";
+    }
+
+    function formatDuration(seconds) {
+      if (!seconds) return "";
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = seconds % 60;
+      if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+      return `${m}:${String(s).padStart(2, "0")}`;
+    }
+
+    function qualityLabel(height) {
+      if (height >= 2160) return "4K";
+      if (height >= 1440) return "2K";
+      if (height >= 1080) return "1080p";
+      if (height >= 720) return "720p";
+      if (height >= 480) return "480p";
+      if (height >= 360) return "360p";
+      if (height >= 240) return "240p";
+      return height + "p";
+    }
+
+    function showError(msg) {
+      const el = document.getElementById("error-msg");
+      el.textContent = msg;
+      el.classList.add("active");
+    }
+
+    function clearError() {
+      document.getElementById("error-msg").classList.remove("active");
+    }
+
+    async function fetchFormats() {
+      const url = urlInput.value.trim();
+      if (!url) return;
+
+      clearError();
+      currentUrl = url;
+
+      document.getElementById("video-info").classList.remove("active");
+      document.getElementById("formats-container").classList.remove("active");
+      document.getElementById("loader").classList.add("active");
+      document.getElementById("fetch-btn").disabled = true;
+
+      try {
+        const resp = await fetch("/api/formats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json();
+          throw new Error(data.detail || "Failed to fetch formats");
+        }
+
+        const data = await resp.json();
+        renderResults(data);
+      } catch (err) {
+        showError(err.message);
+      } finally {
+        document.getElementById("loader").classList.remove("active");
+        document.getElementById("fetch-btn").disabled = false;
+      }
+    }
+
+    function renderResults(data) {
+      // Video info
+      document.getElementById("video-thumb").src = data.thumbnail;
+      document.getElementById("video-title").textContent = data.title;
+      document.getElementById("video-channel").textContent = data.channel;
+      document.getElementById("video-duration").textContent = formatDuration(data.duration);
+      document.getElementById("video-info").classList.add("active");
+
+      // Video formats table
+      const vBody = document.getElementById("video-tbody");
+      vBody.innerHTML = "";
+      document.getElementById("video-count").textContent = `(${data.video_formats.length})`;
+
+      for (const f of data.video_formats) {
+        const tr = document.createElement("tr");
+        const label = qualityLabel(f.height);
+        tr.innerHTML = `
+          <td><strong>${label}</strong></td>
+          <td><span class="badge badge-ext">MP4</span></td>
+          <td>${formatBytes(f.filesize)}</td>
+          <td>${f.bitrate ? Math.round(f.bitrate / 1000) + " kbps" : "—"}</td>
+          <td><button class="btn-dl" data-itag="${f.itag}" data-mode="video" onclick="downloadFormat(this)">Download</button></td>
+        `;
+        vBody.appendChild(tr);
+      }
+
+      // Audio formats table
+      const aBody = document.getElementById("audio-tbody");
+      aBody.innerHTML = "";
+      document.getElementById("audio-count").textContent = `(${data.audio_formats.length})`;
+
+      for (const f of data.audio_formats) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${f.abr || "Auto"}</strong></td>
+          <td><span class="badge badge-ext">MP3</span></td>
+          <td>${f.abr || "—"}</td>
+          <td>${formatBytes(f.filesize)}</td>
+          <td><button class="btn-dl" data-itag="${f.itag}" data-mode="audio" onclick="downloadFormat(this)">Download</button></td>
+        `;
+        aBody.appendChild(tr);
+      }
+
+      document.getElementById("formats-container").classList.add("active");
+    }
+
+    async function downloadFormat(btn) {
+      const itag = parseInt(btn.dataset.itag);
+      const mode = btn.dataset.mode;
+
+      btn.disabled = true;
+      btn.textContent = "Downloading...";
+
+      try {
+        const resp = await fetch("/api/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ url: currentUrl, itag: itag, mode: mode }),
+        });
+
+        if (!resp.ok) {
+          const data = await resp.json();
+          throw new Error(data.detail || "Download failed");
+        }
+
+        const disposition = resp.headers.get("Content-Disposition");
+        let filename = "download";
+        if (disposition) {
+          const match = disposition.match(/filename="(.+?)"/);
+          if (match) filename = match[1];
+        }
+
+        const blob = await resp.blob();
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(a.href);
+      } catch (err) {
+        showError("Download error: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Download";
+      }
+    }
+  </script>
+</body>
+</html>

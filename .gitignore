@@ -1,0 +1,22 @@
+# Build output
+build/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# ffmpeg binary (too large for git — users get it via installer)
+bin/ffmpeg
+
+# IDE
+.vscode/
+.idea/
+
+# Claude Code
+.claude/

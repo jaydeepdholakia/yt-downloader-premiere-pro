@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YT Downloader</title>
+  <link rel="stylesheet" href="css/panel.css">
+</head>
+<body>
+  <div class="panel-header">
+    <h1><span>YT</span> Downloader</h1>
+    <div class="server-controls">
+      <span class="server-dot offline" id="server-dot"></span>
+      <button class="btn-server start" id="server-btn" onclick="toggleServer()">Start the App</button>
+    </div>
+  </div>
+
+  <div class="search-section">
+    <input type="text" id="url-input" placeholder="Paste YouTube URL..." />
+    <button class="btn-fetch" id="fetch-btn" onclick="fetchFormats()">Fetch</button>
+  </div>
+
+  <div class="error-msg" id="error-msg"></div>
+  <div class="success-msg" id="success-msg"></div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <p>Fetching formats...</p>
+  </div>
+
+  <div class="video-info" id="video-info">
+    <img id="video-thumb" src="" alt="Thumbnail" />
+    <div class="video-meta">
+      <h2 id="video-title"></h2>
+      <div class="channel" id="video-channel"></div>
+      <div class="duration" id="video-duration"></div>
+    </div>
+  </div>
+
+  <!-- Download Options -->
+  <div class="download-options" id="download-options">
+    <h3>Download Options</h3>
+    <div class="option-row">
+      <label for="output-dir">Save to folder:</label>
+      <div class="folder-picker">
+        <input type="text" id="output-dir" placeholder="/Users/you/Downloads" readonly />
+        <button class="btn-browse" id="browse-btn">Browse</button>
+      </div>
+    </div>
+    <div class="option-row">
+      <label class="checkbox-label">
+        <input type="checkbox" id="import-premiere" />
+        Import into Premiere Pro project
+      </label>
+    </div>
+    <div class="option-row sub-option" id="bin-option" style="display:none;">
+      <label for="bin-name">Target bin (folder) name:</label>
+      <input type="text" id="bin-name" placeholder="YouTube Downloads" />
+    </div>
+  </div>
+
+  <div class="formats-container" id="formats-container">
+    <!-- Video Formats -->
+    <div class="format-section">
+      <h3>
+        &#127909; Video Formats
+        <span class="count" id="video-count"></span>
+      </h3>
+      <div style="overflow-x:auto;">
+        <table class="format-table">
+          <thead>
+            <tr>
+              <th>Quality</th>
+              <th>Format</th>
+              <th>Size</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="video-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Audio Formats -->
+    <div class="format-section">
+      <h3>
+        &#127925; Audio Only (MP3)
+        <span class="count" id="audio-count"></span>
+      </h3>
+      <div style="overflow-x:auto;">
+        <table class="format-table">
+          <thead>
+            <tr>
+              <th>Quality</th>
+              <th>Format</th>
+              <th>Size</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="audio-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-footer">
+    made with &#10084;&#65039; by <a href="https://x.com/DholakiaJaydeep" id="jd-link">JD</a> &amp; Claude
+  </div>
+
+  <script src="js/CSInterface.js"></script>
+  <script src="js/panel.js"></script>
+</body>
+</html>
